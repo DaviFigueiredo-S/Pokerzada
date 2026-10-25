@@ -1,1 +1,98 @@
-# Pokerzada
+# A Pokerzada Lendária ♣️
+
+Plataforma para registrar partidas **presenciais** entre amigos. HTML5, CSS3 e JavaScript, sem framework ou dependências npm.
+
+## Executar
+
+Requer Node.js 22 ou mais recente.
+
+```powershell
+cd "C:\Segunda memoria Eterna\pokerzada-lendaria"
+npm run dev
+```
+
+Abra http://127.0.0.1:4173. Em outro computador, use o caminho onde extraiu o projeto.
+Não abra index.html por file://, pois a aplicação usa módulos JavaScript.
+
+- **Entrar no clube** acessa dados privados compartilhados no Supabase.
+- **Explorar demonstração** usa somente este navegador. Essa opção não sincroniza e não deve ser confundida com o banco.
+- Os registros reais sobrevivem ao fechamento do navegador. O organizador pode precisar entrar novamente.
+- A demonstração começa sem partidas fictícias; os nove jogadores são pré-cadastrados.
+
+## Situação desta entrega — 25/10/2026
+
+O Supabase existente **poker**, projeto `ewyemeecnaptlbpoiakx`, recebeu o esquema, as políticas e os nove jogadores. `dist/config.js` já contém a URL e a **chave publicável**; nenhuma chave administrativa está no frontend.
+
+**Ainda falta criar e autorizar a primeira conta de organizador.** Sem isso, o banco rejeita o login de um usuário sem autorização. Veja `supabase/ACESSO.md`. A senha deve ser escolhida pelo titular, fora desta conversa.
+
+A publicação automática não foi concluída: a conexão Git HTTPS deste ambiente foi recusada. Nenhum repositório GitHub de terceiros foi alterado. É necessário escolher/criar seu repositório e enviar este código. Incluí configuração de Vercel e workflow de GitHub Pages.
+
+A geração de imagens foi verificada na prévia em 1080 × 1350 e 1080 × 1080; o download automatizado não pôde ser confirmado porque a automação do navegador travou. Login real entre dois dispositivos e produção publicada ainda aguardam a conta e a hospedagem.
+
+## Funcionalidades implementadas
+
+- Nove perfis permanentes, novos jogadores, foto reduzida, edição e desativação com histórico preservado.
+- Sessões com Ancião, seleção dos presentes, entrada/re-buy padrão de R$ 5,00, modos Express e Lendária, três modalidades para registro opcional de cartas.
+- Mesa adaptativa, painel individual, entradas automáticas, re-buys, presença, estornos e ajustes auditados.
+- Cinco denominações com cores configuráveis. Contador de fichas separado da compra; uso opcional da contagem na apuração.
+- Dez categorias de mãos na ordem solicitada, vencedor sem categoria, empate, cartas visuais, observações, edição e exclusão lógica. Rodadas não movimentam dinheiro.
+- Fechamento em centavos, campos pendentes distintos de zero, divergências bloqueadas, placar, snapshots de fechamento e reabertura auditada.
+- Arquivo com filtros e relatórios; rankings financeiros, re-buys, participação e rodadas; conquistas com critérios visíveis.
+- Sete gráficos com seleção de jogadores, períodos, pontos interativos e tabela acessível.
+- Retrospectiva mensal, anual, personalizada e histórica; seleção de 1 a 4 destaques no cartão; opções de ocultar dinheiro e fotos.
+- Exportações JSON/CSV, auditoria, demonstração restaurável, redução de animações, navegação móvel.
+- Autenticação Supabase, permissões verificadas pelo servidor, RPC transacional, idempotência, controle de revisão e recuperação de envio ambíguo.
+
+## Arquitetura e integridade
+
+`dist/js/domain.js` contém cálculos puros e validações; `repository.js` contém os adaptadores local e Supabase; `app.js` contém a interface; `visuals.js` contém gráficos e exportação Canvas.
+
+O banco usa tabelas de jogadores, sessões, configurações, organizadores, operações e auditoria. Uma sessão é um agregado JSONB transacional: participantes, entradas, contagens, rodadas, cartas, apurações e fechamentos. As views relacionais expõem esses itens para consulta. Todas as alterações de uma sessão são validadas juntas; não existem duas fontes concorrentes para o mesmo saldo.
+
+- Dinheiro: inteiros em centavos, sem cálculo em ponto flutuante.
+- Resultado: recebido − entrada − re-buys − ajustes individuais.
+- Conferência: investido = recebido + ajustes de caixa. Um ajuste positivo de caixa representa retirada justificada; negativo, entrada externa. Seu motivo é obrigatório.
+- Estatísticas: somente sessões finalizadas, completas e com diferença zero.
+- Empates: separados de vitórias individuais; gráficos de categorias contabilizam cada vencedor registrado, com explicação na tela.
+- Correções: reabertura exige motivo, retira a sessão dos rankings até novo fechamento e preserva o fechamento anterior.
+- Ancião é uma identificação histórica. A autorização real vem do usuário autenticado cadastrado em `poker_organizers`.
+- UUID de operação evita repetição após falha de conexão. Revisões bloqueiam edição de sessão desatualizada.
+- Envios pendentes ficam associados ao projeto e usuário no navegador. Reenviar reutiliza o UUID original.
+- A aplicação não promete funcionamento offline completo. Preserva a última leitura e a tentativa pendente; reconcilia após reconexão.
+- Realtime atualiza alterações e polling a cada 10 segundos funciona como reconciliação.
+
+Fotos são reduzidas para 240 × 240 e armazenadas como data URL nas linhas protegidas, com limite validado no servidor. Não há bucket público. Para grandes volumes de fotos, migrar para Storage privado; o grupo atual não depende disso.
+
+## Segurança
+
+Todas as tabelas públicas têm RLS. Usuários sem autorização não conseguem ler os dados nem chamar as operações. Escrita direta de tabelas é revogada. Helpers privilegiados ficam em schema privado, usam search_path fixo e verificam auth.uid. Views usam security_invoker.
+
+As chaves publicáveis identificam o projeto; não concedem administração. Nunca coloque `service_role`, `sb_secret_`, senha do banco ou tokens de Git no JavaScript, no ZIP ou no repositório.
+
+Auditoria é imutável para o cliente. O proprietário do banco, por definição, mantém poderes administrativos. Faça exportações regulares e mantenha o backup do provedor conforme sua política.
+
+## Testar
+
+```powershell
+npm test
+```
+
+26 testes automatizados passaram nesta entrega. O arquivo `tests/database.integration.sql` exercita o servidor dentro de uma transação com **rollback**: não persiste usuários nem partidas de teste. Executar com privilégios de proprietário em ambiente de teste; pressupõe a instalação com os nove jogadores iniciais.
+
+Veja `VERIFICACAO.md` para o escopo realmente conferido e as pendências.
+
+## Publicar
+
+**Vercel:** importe seu repositório, selecione Other e mantenha saída `dist`. O arquivo `vercel.json` executa os testes no build. Nenhuma compilação do frontend é necessária.
+
+**GitHub Pages:** envie o projeto ao seu repositório, configure Settings → Pages → Source → GitHub Actions e execute o workflow incluído. Ele roda os testes e publica somente `dist`, nunca os scripts administrativos SQL.
+
+Não há banco dentro do GitHub Pages: o frontend conecta ao Supabase configurado.
+
+Antes de uso real: autorize a conta, valide entrada, re-buy e fechamento em uma sessão identificada como teste em ambiente apropriado, abra em dois dispositivos e confirme atualização e recuperação. Não conte esses testes como partidas da turma.
+
+Referências oficiais consultadas:
+- https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+- https://vercel.com/docs/project-configuration/vercel-json
+- https://supabase.com/docs/guides/database/postgres/row-level-security
+
