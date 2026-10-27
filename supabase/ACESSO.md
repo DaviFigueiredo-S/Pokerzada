@@ -1,66 +1,46 @@
-# Acesso por nome de usuário
+# Primeiro acesso — atualizado em 26/10/2026
 
-O site usa Supabase Auth para guardar o hash das senhas e validar sessões. Cada conta recebe uma identidade técnica interna aleatória; ninguém precisa fornecer ou confirmar um e-mail. O nome de usuário é único sem diferenciar maiúsculas/minúsculas.
+## Correção aplicada
 
-## Inicializar Davi303 uma única vez
+O serviço Auth gravava os metadados administrativos após inserir a identidade. O gatilho antigo observava somente a inserção, deixando contas sem vínculo na aplicação. A migração 20261026170059_repair_auth_metadata_registration.sql observa inserção e atualização dos metadados, é idempotente e bloqueia nomes duplicados. Já foi aplicada no projeto configurado.
 
-O banco e a função `poker-auth` já estão instalados no projeto `ewyemeecnaptlbpoiakx`. A conta real **ainda não foi criada**. O procedimento abaixo deve ser executado pelo titular do projeto em um terminal particular.
+As duas tentativas anteriores foram recuperadas, sem alteração de senha:
+- Bruno: cadastro mais recente.
+- Bruno_025eb691dd26: cadastro anterior.
 
-A senha curta originalmente solicitada não é usada. O script gera uma senha temporária aleatória de 32 caracteres, exibe-a somente no terminal e não a salva no projeto. O banco bloqueia acesso aos dados e ações até a troca da senha. O cadastro público não pode reservar nem assumir Davi303.
+Ambas são contas comuns, aguardando liberação do principal. Autenticar deve abrir a tela de espera; isso não significa senha incorreta.
 
-1. No painel do seu projeto Supabase, obtenha a chave secreta de servidor. Não a coloque em `dist/config.js`, GitHub ou na conversa.
-2. Abra PowerShell na pasta do projeto e execute:
+## Criar Davi303 com senha definitiva
+
+Davi303 ainda precisa ser inicializado pelo titular. A conta não pode ser obtida pelo cadastro público. Não envie senhas ou a chave secreta na conversa.
+
+No PowerShell, execute:
 
 ```powershell
-$env:SUPABASE_URL = 'https://ewyemeecnaptlbpoiakx.supabase.co'
-$pokerSecret = Read-Host 'Chave secreta do projeto Supabase' -AsSecureString
-try {
-    $env:SUPABASE_SECRET_KEY = [System.Net.NetworkCredential]::new('', $pokerSecret).Password
-    node .\scripts\bootstrap-admin.mjs
-} finally {
-    Remove-Item Env:SUPABASE_SECRET_KEY -ErrorAction SilentlyContinue
-    Remove-Variable pokerSecret -ErrorAction SilentlyContinue
-}
+cd "C:\Segunda memoria Eterna\pokerzada-lendaria"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\iniciar-admin.ps1
 ```
 
-3. Abra o site atualizado, clique **Entrar no clube**, use `Davi303` e a senha temporária exibida no seu terminal.
-4. A tela exigirá a senha atual, uma nova senha de 12 a 128 caracteres e sua confirmação. Escolha você mesmo a nova senha.
-5. Após a troca, **A TROPA → Poder de TcheTche ♛** fica disponível.
+O script desta pasta pede, com entrada oculta:
+1. Chave secreta de servidor do seu projeto Supabase, disponível no painel do projeto em API Keys. Não use a chave publicável.
+2. Sua senha definitiva, entre 12 e 128 caracteres.
+3. Confirmação da senha.
 
-Se o script informar que a conta principal já existe, ele não altera senha nem recria a conta. Não insista nem apague contas para repetir a inicialização.
+A chave e a senha ficam somente no processo e são removidas das variáveis ao terminar. A senha não é exibida nem salva em arquivo. O servidor não redefine uma conta já existente. A senha permanece válida até uma alteração solicitada; não existe troca inicial obrigatória nesse procedimento.
 
-## Integrantes e organizadores
+Depois abra a versão local, entre com Davi303 e sua senha. A senha ADMIN não foi configurada. Em Minha conta você poderá alterar a senha quando quiser.
 
-- Cada pessoa escolhe **Criar minha conta** e informa somente usuário, senha e confirmação.
-- Novos cadastros aguardam liberação. Isso preserva a decisão de manter as informações restritas à turma convidada.
-- Davi303 pode **Liberar leitura**, **Promover a organizador**, **Remover poder de organizador** e **Suspender acesso**, sempre com confirmação.
-- Remover o poder de organizador preserva a conta e seu acesso de leitura. Suspender acesso bloqueia também a leitura.
-- Organizadores não promovem outros usuários nem recuperam partidas removidas.
-- Davi303 tem proteção contra rebaixamento e suspensão pela aplicação.
-- Contas de acesso e perfis dos nove jogadores são entidades diferentes. O nome do Ancião identifica o responsável histórico por uma sessão; não é uma credencial.
+## Permissões
 
-## Instalação e atualização do banco
+Novos integrantes podem criar conta e entrar, mas aguardam liberação. Davi303 libera leitura e promove/rebaixa organizadores em Poder de TcheTche. Contas, perfis dos jogadores e Ancião continuam separados. Autorizações são conferidas no servidor.
 
-No projeto atual, estas migrações **já foram aplicadas**. Não as execute novamente:
+## Instalação em outro projeto vazio
 
-1. `20261025180420_poker_accounts_permissions_autorounds_soft_delete.sql`
-2. `20261026005558_fix_auth_rate_bucket_ambiguity.sql`
+Aplicar 001_schema.sql e as migrações da pasta migrations em ordem. Publicar poker-auth a partir de supabase/functions/poker-auth/index.ts com verify_jwt=false: login/cadastro são públicos, mas a função valida credenciais e protege bootstrap com segredo de servidor. Configurar somente URL e chave publicável em dist/config.js.
 
-A primeira evolui a tabela existente de organizadores para contas, preserva os dados, adiciona papéis/permissões e gatilhos de autenticação, numera rodadas sob bloqueio da sessão e implementa exclusão lógica/recuperação auditadas. A segunda corrige a ambiguidade de parâmetro do limitador de tentativas.
+Não reaplicar os arquivos sobre o projeto atual: eles já foram executados. Não expor segredos no frontend.
 
-Para **outro projeto vazio**, aplique `001_schema.sql` uma única vez e, depois, os dois arquivos de migração na ordem acima. Publique a função `supabase/functions/poker-auth/index.ts` com verificação JWT do gateway desativada: cadastro/login precisam ser acessíveis antes de autenticar. A própria função valida JWT e senha atual na troca de senha; bootstrap exige segredo de servidor. As variáveis de servidor são fornecidas pelo Supabase, sem incluí-las no frontend.
+## Validação ainda necessária pelo titular
 
-Atualize somente URL e chave publicável em `dist/config.js`. Para projeto existente diferente, compare o esquema antes de aplicar; não recrie tabelas sobre dados reais.
-
-Contas antigas de organizadores, se existirem em outra instalação, são preservadas com nome `legacy_` seguido de parte do UUID. Consulte `poker_accounts.username` de forma administrativa para identificar o nome atribuído; a senha anterior continua no Supabase Auth.
-
-## Recuperação e limitações
-
-A recuperação de senha esquecida exige o titular do projeto: não existe recuperação por e-mail fictício. Não exponha endpoints públicos de redefinição administrativa. A troca normal usa **Configurações → Alterar minha senha**.
-
-Partidas removidas continuam no banco. Davi303 recupera em **Poder de TcheTche → Partidas removidas**, informando motivo. Os resultados voltam às estatísticas somente se a sessão continua finalizada e válida.
-
-Backups JSON da aplicação não contêm senhas nem credenciais de autenticação. A importação continua restrita à demonstração. O backup de produção e a recuperação de contas devem usar os mecanismos administrativos do provedor.
-
-O teste de login real com Davi303 e a verificação em dois aparelhos ainda dependem dessa inicialização. Testes de banco usam rollback; nenhuma conta temporária desses testes foi persistida.
+O primeiro login real de Davi303 e o teste em dois aparelhos dependem de você escolher a senha e concluir a inicialização. Os testes automáticos de autenticação usam Auth simulado; os gatilhos e permissões foram testados no banco real com rollback.
 

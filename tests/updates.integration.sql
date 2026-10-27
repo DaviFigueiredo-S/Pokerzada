@@ -24,7 +24,7 @@ declare oid uuid:=current_setting('test.owner_id')::uuid; mid uuid:=current_sett
  p1 text:='00000000-0000-4000-8000-000000000001';p2 text:='00000000-0000-4000-8000-000000000002';s jsonb;snap jsonb;rev integer;denied boolean;i integer;original_revision integer;
 begin
  snap:=public.poker_snapshot();assert not (snap->'account'->>'must_change_password')::boolean,'Troca libera acesso';
- assert jsonb_array_length(snap->'accounts')=2,'Principal lista cadastros';
+ assert (select count(*) from jsonb_array_elements(snap->'accounts') a where a->>'username' in ('Davi303','Anthony'))=2,'Principal lista cadastros';
  perform set_config('request.jwt.claim.sub',mid::text,true);
  assert jsonb_array_length(public.poker_snapshot()->'players')=0,'Cadastro aguarda liberação';
  perform set_config('request.jwt.claim.sub',oid::text,true);

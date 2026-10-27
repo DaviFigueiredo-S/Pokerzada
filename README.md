@@ -15,23 +15,17 @@ Abra http://127.0.0.1:4173. Em outro computador, use o caminho onde extraiu o pr
 Não abra index.html por file://, pois a aplicação usa módulos JavaScript.
 
 - **Entrar no clube** acessa dados privados compartilhados no Supabase.
-- **Explorar demonstração** usa somente este navegador. Essa opção não sincroniza e não deve ser confundida com o banco.
+- **Criar minha conta** cadastra um integrante; um administrador autorizado libera o acesso à turma.
 - Os registros reais sobrevivem ao fechamento do navegador. O organizador pode precisar entrar novamente.
-- A demonstração começa sem partidas fictícias; os nove jogadores são pré-cadastrados.
+- Jogadores reais são vinculados às contas cadastradas. Perfis antigos foram arquivados, preservando o histórico.
 
-## Situação desta entrega — 25/10/2026
+## Situação atual — 27/10/2026
 
-O Supabase existente **poker**, projeto `ewyemeecnaptlbpoiakx`, recebeu o esquema, as políticas e os nove jogadores. `dist/config.js` já contém a URL e a **chave publicável**; nenhuma chave administrativa está no frontend.
-
-**Cadastro por usuário e senha, permissões e migrações já estão implementados. Falta executar a inicialização segura da conta real Davi303.** Veja `supabase/ACESSO.md`: o script gera uma senha temporária aleatória, e o primeiro login exige a troca. Novos cadastros aguardam liberação de leitura pelo principal.
-
-A publicação automática não foi concluída: a conexão Git HTTPS deste ambiente foi recusada. Nenhum repositório GitHub de terceiros foi alterado. É necessário escolher/criar seu repositório e enviar este código. Incluí configuração de Vercel e workflow de GitHub Pages.
-
-A geração de imagens foi verificada na prévia em 1080 × 1350 e 1080 × 1080; o download automatizado não pôde ser confirmado porque a automação do navegador travou. Login real entre dois dispositivos e produção publicada ainda aguardam a conta e a hospedagem.
+Veja ATUALIZACAO-NIGHTCLUB.md para alterações, testes, arquivos e instruções da entrega mais recente. Cadastro e login já foram confirmados pelo titular; Davi303 está inicializado e sua senha permanece inalterada. As migrações da atualização e a função poker-auth já estão aplicadas no Supabase existente. O frontend local foi atualizado; não houve publicação nesta entrega.
 
 ## Funcionalidades implementadas
 
-- Nove perfis permanentes, novos jogadores, foto reduzida, edição e desativação com histórico preservado.
+- Perfis permanentes vinculados às contas, foto reduzida, edição e desativação com histórico preservado.
 - Sessões com Ancião, seleção dos presentes, entrada/re-buy padrão de R$ 5,00, modos Express e Lendária, três modalidades para registro opcional de cartas.
 - Mesa adaptativa, painel individual, entradas automáticas, re-buys, presença, estornos e ajustes auditados.
 - Cinco denominações com cores configuráveis. Contador separado da compra, com salvamento automático após 650 ms e atualização do valor recebido. Zero é válido; o botão manual continua disponível.
@@ -40,8 +34,8 @@ A geração de imagens foi verificada na prévia em 1080 × 1350 e 1080 × 1080;
 - Arquivo com filtros e relatórios; rankings financeiros, re-buys, participação e rodadas; conquistas com critérios visíveis.
 - Sete gráficos com seleção de jogadores, períodos, pontos interativos e tabela acessível.
 - Retrospectiva mensal, anual, personalizada e histórica; seleção de 1 a 4 destaques no cartão; opções de ocultar dinheiro e fotos.
-- Exportações JSON/CSV, auditoria, demonstração restaurável, redução de animações, navegação móvel.
-- Cadastro/login sem e-mail real, principal com troca obrigatória de senha e Poder de TcheTche para liberar leitura/promover/rebaixar usuários.
+- Exportações JSON/CSV, auditoria, redução de animações, navegação móvel.
+- Cadastro/login sem e-mail real, principal com senha definitiva escolhida pelo titular e Poder de TcheTche para liberar leitura/promover/rebaixar usuários.
 - Exclusão lógica de partidas por organizadores, recuperação pelo principal e recálculo das estatísticas.
 - Autenticação Supabase, permissões verificadas pelo servidor, RPC transacional, idempotência, controle de revisão e recuperação de envio ambíguo.
 
@@ -79,9 +73,9 @@ Auditoria é imutável para o cliente. O proprietário do banco, por definição
 npm test
 ```
 
-40 testes automatizados passaram na atualização. Os três testes SQL de integração também passaram no PostgreSQL real com rollback. O arquivo `tests/database.integration.sql` exercita o servidor dentro de uma transação com **rollback**: não persiste usuários nem partidas de teste. Executar com privilégios de proprietário em ambiente de teste; pressupõe a instalação com os nove jogadores iniciais.
+54 testes automatizados passaram nesta atualização. Os testes SQL atuais são tests/collaborative.integration.sql e tests/nightclub.integration.sql; ambos passaram no PostgreSQL real com rollback. Os scripts SQL antigos documentam versões anteriores e podem pressupor os perfis originais.
 
-Veja `VERIFICACAO.md` para o escopo realmente conferido e as pendências.
+Veja ATUALIZACAO-NIGHTCLUB.md para o escopo realmente conferido e os limites dos testes.
 
 ## Publicar
 
@@ -91,7 +85,7 @@ Veja `VERIFICACAO.md` para o escopo realmente conferido e as pendências.
 
 Não há banco dentro do GitHub Pages: o frontend conecta ao Supabase configurado.
 
-Antes de uso real: inicialize Davi303 pelo guia, valide entrada, re-buy e fechamento em uma sessão identificada como teste em ambiente apropriado, abra em dois dispositivos e confirme atualização e recuperação. Não conte esses testes como partidas da turma.
+Em uma instalação nova, inicialize o principal pelo guia. No projeto atual ele já existe. Valide entrada, re-buy e fechamento em uma sessão identificada como teste em ambiente apropriado, abra em dois dispositivos e confirme atualização e recuperação. Não conte esses testes como partidas da turma.
 
 Referências oficiais consultadas:
 - https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages

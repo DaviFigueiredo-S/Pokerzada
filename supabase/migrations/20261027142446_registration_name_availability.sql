@@ -1,0 +1,6 @@
+begin;
+create function poker_private.poker_name_available(candidate text) returns boolean language sql stable security definer set search_path='' as $$ select not exists(select 1 from public.poker_accounts where poker_private.name_key(username)=poker_private.name_key(candidate) or poker_private.name_key(display_name)=poker_private.name_key(candidate)) and not exists(select 1 from public.poker_players where data->>'accountId' is not null and poker_private.name_key(data->>'name')=poker_private.name_key(candidate)); $$;
+revoke all on function poker_private.poker_name_available(text) from public,anon,authenticated;grant execute on function poker_private.poker_name_available(text) to service_role;
+create function public.poker_name_available(candidate text) returns boolean language sql security invoker set search_path='' as $$ select poker_private.poker_name_available(candidate); $$;
+revoke all on function public.poker_name_available(text) from public,anon,authenticated;grant execute on function public.poker_name_available(text) to service_role;
+commit;

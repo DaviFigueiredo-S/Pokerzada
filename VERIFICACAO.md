@@ -1,3 +1,19 @@
+# Situação atual — 27/10/2026
+
+Veja ATUALIZACAO-NIGHTCLUB.md para a revisão mais recente (54 testes Node e duas integrações SQL aprovadas). ATUALIZACAO-COLABORATIVA.md documenta a etapa anterior. Davi303 já foi inicializado e o usuário confirmou login/cadastro funcionando. As instruções históricas abaixo não descrevem pendências atuais.
+
+# Retomada de autenticação — 26/10/2026
+
+Esta seção substitui as instruções anteriores de senha temporária. O principal agora usa senha definitiva escolhida pelo titular por scripts/iniciar-admin.ps1. A conta real ainda aguarda esse passo privado.
+
+Diagnóstico real: dois usuários Bruno existiam em auth.users, mas não em poker_accounts. Os metadados chegaram após INSERT. Corrigido o gatilho para INSERT/UPDATE com idempotência, e recuperadas as identidades sem mudar senhas (Bruno e Bruno_025eb691dd26). Migração 20261026170059 aplicada; Edge poker-auth versão 2 publicada. Cadastro verifica vínculo antes de anunciar sucesso; falha de entrada após cadastro não pede novo cadastro.
+
+40 testes Node passaram. Novo tests/auth-metadata.integration.sql passou no PostgreSQL com rollback: metadados tardios, repetição, duplicados, user_metadata sem privilégios e principal com senha definitiva. O menu Minha conta está implementado; o login válido com senha do titular e o fluxo visual das permissões ainda dependem da inicialização.
+
+Advisor informa proteção contra senhas vazadas desativada: https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection . Não alterada nesta correção.
+
+## Registro anterior (histórico)
+
 # Atualização verificada — 25/10/2026 (horário de Brasília)
 
 ## Estado encontrado na retomada
