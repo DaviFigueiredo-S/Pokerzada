@@ -1,6 +1,0 @@
-[functions.poker-auth]
-verify_jwt = false
-
-# JWT validado em /auth/v1/user; autorização repetida no banco.
-[functions.poker-profile]
-verify_jwt = false
