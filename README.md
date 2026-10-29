@@ -1,13 +1,14 @@
 # A Pokerzada Lendária ♣️
 
-Plataforma para registrar partidas **presenciais** entre amigos. HTML5, CSS3 e JavaScript, sem framework ou dependências npm.
+Plataforma para registrar partidas **presenciais** entre amigos. HTML5, CSS3 e JavaScript, sem framework no frontend. Dependências npm fixadas são usadas no desenvolvimento e nos testes; a função de fotos usa jpeg-js no servidor.
 
 ## Executar
 
 Requer Node.js 22 ou mais recente.
 
 ```powershell
-cd "C:\Segunda memoria Eterna\pokerzada-lendaria"
+cd "C:\Segunda memoria Eterna\pokerzada-legado"
+npm ci
 npm run dev
 ```
 
@@ -19,9 +20,9 @@ Não abra index.html por file://, pois a aplicação usa módulos JavaScript.
 - Os registros reais sobrevivem ao fechamento do navegador. O organizador pode precisar entrar novamente.
 - Jogadores reais são vinculados às contas cadastradas. Perfis antigos foram arquivados, preservando o histórico.
 
-## Situação atual — 27/10/2026
+## Situação atual — 28/10/2026
 
-Veja ATUALIZACAO-NIGHTCLUB.md para alterações, testes, arquivos e instruções da entrega mais recente. Cadastro e login já foram confirmados pelo titular; Davi303 está inicializado e sua senha permanece inalterada. As migrações da atualização e a função poker-auth já estão aplicadas no Supabase existente. O frontend local foi atualizado; não houve publicação nesta entrega.
+Veja **IMPLEMENTACAO-LEGADO.md** para a entrega atual: Central do Legado, personagens, editor de fotos e exclusão real de contas. **A migração de 28/10 e as versões das funções desta entrega ainda precisam ser aplicadas ao Supabase compartilhado.** Não houve publicação nem push. Cadastro e login existentes foram preservados; Davi303 permanece com a mesma senha. ATUALIZACAO-NIGHTCLUB.md documenta a etapa anterior, não o estado de implantação desta entrega.
 
 ## Funcionalidades implementadas
 
@@ -57,7 +58,7 @@ O banco usa tabelas de jogadores, sessões, configurações, contas/permissões,
 - A aplicação não promete funcionamento offline completo. Preserva a última leitura e a tentativa pendente; reconcilia após reconexão.
 - Realtime atualiza alterações e polling a cada 10 segundos funciona como reconciliação.
 
-Fotos são reduzidas para 240 × 240 e armazenadas como data URL nas linhas protegidas, com limite validado no servidor. Não há bucket público. Para grandes volumes de fotos, migrar para Storage privado; o grupo atual não depende disso.
+Fotos são reprocessadas e reduzidas para 240 × 240 nas linhas protegidas. A cópia de edição, otimizada para até 1200 pixels e sem metadados, fica em tabela privada, separada dos snapshots compartilhados. Não há bucket público nem fotografia copiada para cada mesa. Veja os limites e as permissões em IMPLEMENTACAO-LEGADO.md.
 
 ## Segurança
 
@@ -70,12 +71,14 @@ Auditoria é imutável para o cliente. O proprietário do banco, por definição
 ## Testar
 
 ```powershell
+npm ci
 npm test
+npm run test:browser -- --reporter=line
 ```
 
-54 testes automatizados passaram nesta atualização. Os testes SQL atuais são tests/collaborative.integration.sql e tests/nightclub.integration.sql; ambos passaram no PostgreSQL real com rollback. Os scripts SQL antigos documentam versões anteriores e podem pressupor os perfis originais.
+73 testes Node/SQL e 7 testes de navegador passaram nesta entrega. O banco de teste é Postgres/PGlite isolado, carregando as migrações reais; o serviço Auth é simulado. Chrome é necessário para os testes de navegador. As verificações de implantação no Supabase hospedado estão pendentes.
 
-Veja ATUALIZACAO-NIGHTCLUB.md para o escopo realmente conferido e os limites dos testes.
+Veja VERIFICACAO.md e IMPLEMENTACAO-LEGADO.md para os cenários e limites atuais.
 
 ## Publicar
 

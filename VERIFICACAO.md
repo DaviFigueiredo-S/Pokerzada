@@ -1,4 +1,42 @@
-# Situação atual — 27/10/2026
+# Verificação atual — Legado — 28/10/2026
+
+Implementação na cópia `pokerzada-legado`; original preservado. Instruções completas, arquivos e matriz de acesso: **IMPLEMENTACAO-LEGADO.md**.
+
+## Resultados executados nesta entrega
+
+- **73 testes Node/SQL aprovados**, sem falhas, pulos ou cancelamentos. Incluem os testes existentes e as novas integrações de exclusão, personagens, privilégios e preservação financeira.
+- **7 testes Playwright aprovados no Chrome instalado**, com interface real conectada a servidor de teste e migrações/RPCs reais em Postgres/PGlite. Nenhum erro JavaScript não tratado foi capturado nas páginas principais desses sete testes.
+- Sintaxe de JavaScript/MJS verificada; `npm audit` informou **zero vulnerabilidades conhecidas** nas dependências instaladas na data da execução.
+- Comparação de arquivos com a base: nenhum arquivo original removido; `domain.js`, `autosave.js` e `visuals.js` idênticos à base. Busca por padrões de chaves secretas/tokens administrativos no conteúdo entregável não encontrou ocorrências. A configuração publicável existente é preservada.
+
+| Área | Evidência executada |
+| --- | --- |
+| Exclusão real | Conta com/sem histórico; Auth e conta removidos no banco isolado; foto privada apagada; resultados e centavos preservados; perda de acesso ao snapshot; nome reutilizável por uma identidade nova |
+| Falha parcial | Falha antes da remoção Auth no teste unitário; falha após Auth no navegador; pendência acessível após recarga; conclusão repetível sem duplicação |
+| Permissões | Membro/organizador impedidos de excluir contas; TcheTche impedido de excluir outro TcheTche; principal protegido inclusive por gatilho; pendência não pode ser reativada; chamadas diretas às RPCs de serviço rejeitadas |
+| Banco | Todas as migrações aplicadas em Postgres/PGlite novo; RLS conferida nas tabelas públicas/privadas; fotos não acessíveis diretamente; edição de outro perfil negada; revisão de personagem impede sobrescrita desatualizada |
+| Identidade legada | Dois perfis com nomes legados duplicados preparados no fixture; suspensão/reativação não reinserem perfil nem geram falso erro de nome duplicado |
+| Rodadas | Primeira/intermediária/última/única; repetição idempotente; manutenção de IDs, entradas e finais; bloqueio após fechamento; sequência automática com comandos sobre versão anterior; edição/observações antigas preservadas |
+| Regressão SQL | `auth-database.integration.sql`, `auth-metadata.integration.sql`, `nightclub.integration.sql` e `collaborative.integration.sql` executados com rollback no banco isolado |
+| Legado/Home | Quatro cards, links antigos, estado ativo da navegação e ausência dos cards removidos; páginas históricas reutilizadas |
+| Mesa | Dez assentos em larguras 1440, 1024, 768, 390 e 320 sem sobreposição de retângulos ou rolagem horizontal; grade de dezesseis assentos; destaque da conta atual |
+| Personagens | Dezesseis SVGs distintos, fallback/sanitização, catálogo no editor, traje salvo/recarregado, cancelamento de rascunho, remoção somente da foto e restauração do padrão |
+| Fotos | JPEG real no servidor; PNG/WebP reais convertidos no navegador; rejeição de conteúdo falso, mais de 5 MB, dimensão acima de 8192 pixels e JPEG corrompido; remoção de metadados; zoom/posição e toque via protocolo do Chrome |
+| Sincronização | Resposta de salvamento perdida após commit; editor não anuncia confirmação; repetição com mesmo UUID mantém uma única revisão; segundo acesso atualiza por polling |
+| Fichas | R$ 10,00 e zero reconhecidos no Placar; recarga mantém valor; debounce, rascunho e falhas cobertos pela suíte existente; contagem não altera entradas/re-buys |
+| Financeiro/relatórios | Testes existentes de centavos, fechamento, cancelamento, exclusão/recuperação de partida, rankings, gráficos, retrospectiva e backup passaram |
+
+## Limites e pendências reais
+
+Os testes SQL usam o motor Postgres do PGlite com schema Auth de teste. Isso valida SQL, transações, privilégios e comportamento da aplicação, mas **não é uma execução do serviço Supabase Auth real nem do runtime Deno hospedado**. O servidor de navegador usa os handlers reais com um adaptador Auth simulado. Não foram usadas credenciais reais para testar exclusão, nem alteradas contas/partidas compartilhadas.
+
+Não houve implantação da migração de 28/10, das novas funções, publicação do frontend ou push. Após implantação autorizada, ainda é necessário conferir em homologação o serviço Auth real, as duas Edge Functions, Realtime hospedado e dispositivos físicos. A sincronização verificada em dois acessos usou duas páginas do Chrome e polling, não dois celulares físicos. Safari/Firefox, todos os leitores de tela e um novo download do cartão de retrospectiva não foram testados nesta rodada.
+
+Os testes de concorrência desta suíte verificam idempotência e comandos com versões anteriores; PGlite usa uma conexão. Não foi executado teste de carga ou corrida com várias conexões PostgreSQL em produção. O esquema mantém bloqueios transacionais de linha e advisory locks para coordenar exclusão e comandos.
+
+## Registros anteriores (histórico)
+
+# Situação em 27/10/2026
 
 Veja ATUALIZACAO-NIGHTCLUB.md para a revisão mais recente (54 testes Node e duas integrações SQL aprovadas). ATUALIZACAO-COLABORATIVA.md documenta a etapa anterior. Davi303 já foi inicializado e o usuário confirmou login/cadastro funcionando. As instruções históricas abaixo não descrevem pendências atuais.
 

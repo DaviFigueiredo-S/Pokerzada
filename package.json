@@ -1,1 +1,1 @@
-{"name":"pokerzada-lendaria","version":"1.0.0","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","dev":"node server.mjs"}}
+{"name":"pokerzada-lendaria","version":"1.0.0","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","test:browser":"node scripts/test-browser.mjs","dev":"node server.mjs"},"devDependencies":{"@electric-sql/pglite":"0.5.13","@playwright/test":"1.64.1","jpeg-js":"0.4.4"}}
