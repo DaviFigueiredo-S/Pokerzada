@@ -1,10 +1,10 @@
 import {deleteAccount} from './account-deletion.js';
 export function normalizeUsername(value){const name=String(value||'').trim();if(!/^[A-Za-z0-9_]{3,32}$/.test(name))throw Error('Use de 3 a 32 letras, números ou sublinhados.');return name;}
-export function validatePassword(value){if(typeof value!=='string'||value.length<12||value.length>128)throw Error('A senha precisa ter entre 12 e 128 caracteres.');return value;}
+export function validatePassword(value){if(typeof value!=='string'||value.length<8||value.length>128)throw Error('A senha precisa ter entre 8 e 128 caracteres.');return value;}
 export function createAuthHandler({url,secretKey,publicKey,fetcher=fetch,randomUUID=()=>crypto.randomUUID()}){
  const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Cache-Control':'no-store'};
  const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...headers,'Content-Type':'application/json'}});
- const api=async(path,{body,token,admin=false,method=body?'POST':'GET'}={})=>{const key=admin?secretKey:publicKey;const res=await fetcher(url+path,{method,headers:{apikey:key,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:admin&&key.startsWith('eyJ')?{Authorization:'Bearer '+key}:{})},body:body?JSON.stringify(body):undefined});const data=await res.json().catch(()=>({}));if(!res.ok){const e=new Error(res.status>=500?'Serviço de autenticação indisponível. Tente novamente.':'Não foi possível concluir esta etapa de autenticação.');if(path.startsWith('/rest/v1/rpc/poker_delete_account_')&&['P0001','42501','40001'].includes(data.code))e.message=data.message;e.status=res.status;throw e;}return data;};
+ const api=async(path,{body,token,admin=false,method=body?'POST':'GET'}={})=>{const key=admin?secretKey:publicKey;let res;try{res=await fetcher(url+path,{method,headers:{apikey:key,'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:admin&&key.startsWith('eyJ')?{Authorization:'Bearer '+key}:{})},body:body?JSON.stringify(body):undefined});}catch{const e=Error('Serviço de autenticação indisponível. Tente novamente.');e.status=503;throw e;}const data=await res.json().catch(()=>({}));if(!res.ok){const e=new Error(res.status>=500?'Serviço de autenticação indisponível. Tente novamente.':'Não foi possível concluir esta etapa de autenticação.');if(path.startsWith('/rest/v1/rpc/poker_delete_account_')&&['P0001','42501','40001'].includes(data.code))e.message=data.message;e.status=res.status;throw e;}return data;};
  const rate=async(bucket,max_attempts)=>{const ok=await api('/rest/v1/rpc/poker_auth_rate',{body:{bucket,max_attempts},admin:true});if(!ok)throw Error('Muitas tentativas. Aguarde antes de tentar novamente.');};
  return async req=>{
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
@@ -46,7 +46,6 @@ export function createAuthHandler({url,secretKey,publicKey,fetcher=fetch,randomU
  return reply({ok:true});
  }
  return reply({message:'Operação desconhecida.'},400);
- }catch(e){return reply({message:e instanceof SyntaxError?'Solicitação inválida.':e.message||'Não foi possível concluir.'},400);}
+ }catch(e){return reply({message:e instanceof SyntaxError?'Solicitação inválida.':e.message||'Não foi possível concluir.'},e.status>=500?503:400);}
  };
 }
-
