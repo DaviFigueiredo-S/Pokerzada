@@ -20,7 +20,7 @@ test('estorno preserva registro; investimentos negativos bloqueados',()=>{const 
 test('canceladas não entram em rankings; desativar mantém histórico',()=>{const f=fixture();f.send('player',{...f.state.players[0],active:false});assert.equal(f.s.participants.length,3);f.send('cancel',{reason:'Cancelada'});assert.equal(D.summary(f.state).games,0);});
 test('avaliador: royal, sequência baixa e full house',()=>{const c=(r,s)=>r.map((rank,i)=>({rank,suit:s[i]||s[0],owner:'board'}));assert.equal(D.fiveCardCategory(c(['A','K','Q','J','10'],['♠'])),0);assert.equal(D.fiveCardCategory(c(['A','2','3','4','5'],['♠','♥','♠','♠','♠'])),5);assert.equal(D.fiveCardCategory(c(['A','A','A','K','K'],['♠','♥','♦','♠','♥'])),3);});
 test('não inventar cartas e obedecer Omaha',()=>{assert.equal(D.evaluateRecorded([],'a'),null);const b=['A','K','Q','J','10'].map(rank=>({rank,suit:'♠',owner:'board'})),h=['2','3','4','5'].map(rank=>({rank,suit:'♥',owner:'a'}));assert.notEqual(D.evaluateRecorded([...b,...h],'a','omaha'),'Royal Flush');});
-test('retrospectiva, gráfico e empates apenas com dados finalizados',()=>{const f=fixture(2);f.send('round',{id:D.uuid(),number:1,winners:f.ids,hand:'Trinca',cards:[],note:''});f.ids.forEach(id=>f.send('final',{playerId:id,amount:500}));f.send('finalize');const sum=D.summary(f.state);assert.equal(sum.rounds,1);assert.equal(sum.stats[0].wins,0);assert.equal(sum.stats[0].ties,1);assert.equal(sum.kings.length,0);assert.equal(sum.commonHands[0].hand,'Trinca');assert.equal(chartData(f.state,{type:'cumulative'}).series[0].values[0],0);});
+test('retrospectiva, gráfico e empates apenas com dados finalizados',()=>{const f=fixture(2);f.send('round',{id:D.uuid(),number:1,winners:f.ids,hand:'Trinca',cards:[],note:''});f.ids.forEach(id=>f.send('final',{playerId:id,amount:500}));f.send('finalize');const sum=D.summary(f.state);assert.equal(sum.rounds,1);assert.equal(sum.stats[0].wins,0);assert.equal(sum.stats[0].ties,1);assert.equal(sum.kings.length,0);assert.equal(sum.commonHands[0].hand,'Trinca');assert.equal(chartData(f.state,{type:'cumulative'}).series[0].cells[0].value,0);});
 test('backup serializado preserva registros',()=>{const f=fixture();f.send('rebuy',{playerId:f.ids[0],amount:500});const restored=JSON.parse(JSON.stringify(f.state));assert.deepEqual(restored,f.state);assert.equal(D.totals(restored.sessions[0]).invested,2000);});
 
 
@@ -28,3 +28,33 @@ test('rodadas novas concorrentes usam números únicos; edição preserva observ
 test('excluir e recuperar recalculam estatísticas, gráfico e retrospectiva',()=>{const f=fixture(2);f.send('count',{playerId:f.ids[0],quantities:[0,0,0,10,5],useFinal:true});f.send('count',{playerId:f.ids[1],quantities:[0,0,0,0,0],useFinal:true});f.send('finalize');assert.equal(D.summary(f.state).games,1);f.send('deleteSession',{reason:'Teste'});assert.equal(D.summary(f.state).games,0);assert.equal(D.statistics(f.state)[0].net,0);assert.equal(chartData(f.state,{type:'cumulative'}).labels.length,0);assert.equal(f.s.finals[f.ids[0]],1000);f.send('restoreSession',{reason:'Recuperar'});assert.equal(D.summary(f.state).games,1);assert.equal(D.statistics(f.state)[0].net,500);});
 test('membro não escreve e organizador não concede privilégios nem restaura',()=>{const f=fixture();f.state.account.role='member';assert.throws(()=>f.send('deleteSession',{reason:'Teste'}));f.state.account.role='organizer';assert.throws(()=>f.send('role',{userId:D.uuid(),role:'organizer'}));f.send('deleteSession',{reason:'Teste'});assert.throws(()=>f.send('restoreSession',{reason:'Teste'}));});
 
+test('acumulado diferencia saldo anterior, estreia e zero no recorte, sem misturar homônimos',()=>{
+ const state=D.initialState(),[a,b,c,d,never]=state.players;
+ a.name='Pessoa Teste';b.name='Pessoa Teste';
+ let current=state;
+ function create(date,people,amounts){
+  const id=D.uuid();
+  current=D.applyCommand(current,{id:D.uuid(),type:'create',payload:{id,name:date,ancient:'Pessoa de teste',startedAt:date+'T21:00:00Z',mode:'quick',variant:'texas',buyin:500,rebuy:500,chips:current.settings.chips,players:people.map(p=>p.id)}});
+  if(!amounts)return;
+  function send(type,payload){const session=current.sessions.find(s=>s.id===id);current=D.applyCommand(current,{id:D.uuid(),type,sessionId:id,expectedRevision:session.revision,payload});}
+  people.forEach((p,i)=>send('final',{playerId:p.id,amount:amounts[i]}));send('finalize',{});
+ }
+ create('2026-01-01',[a,d],[750,250]);
+ create('2026-02-01',[b,c],[500,500]);
+ create('2026-02-02',[a,b],[500,500]);
+ create('2026-02-03',[a,d]);
+ const cumulative=chartData(current,{type:'cumulative',from:'2026-02-01'});
+ const first=cumulative.series.find(s=>s.id===a.id),second=cumulative.series.find(s=>s.id===b.id);
+ assert.notEqual(first.name,second.name);
+ assert.deepEqual(first.cells,[{status:'carried',value:250},{status:'recorded',value:250}]);
+ assert.deepEqual(second.cells,[{status:'recorded',value:0},{status:'recorded',value:0}]);
+ assert.ok(!cumulative.series.some(s=>[d.id,never.id].includes(s.id)));
+ const cSeries=chartData(current,{type:'cumulative'}).series.find(s=>s.id===c.id);
+ assert.deepEqual(cSeries.cells[0],{status:'absent',value:null});
+ assert.deepEqual(cSeries.cells[2],{status:'carried',value:0});
+ const net=chartData(current,{type:'net',from:'2026-02-02'});
+ assert.deepEqual(net.series.find(s=>s.id===a.id).cells,[{status:'recorded',value:0},{status:'pending',value:null}]);
+ assert.deepEqual(net.series.find(s=>s.id===b.id).cells,[{status:'recorded',value:0},{status:'absent',value:null}]);
+ assert.equal(chartData(current,{type:'comparison',from:'2026-02-03'}).series.length,0);
+ assert.equal(chartData(current,{type:'net',players:[]}).series.length,0);
+});
